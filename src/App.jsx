@@ -65,7 +65,7 @@ function App() {
   const [showAddCat, setShowAddCat] = useState(false);
   const [selectedCatId, setSelectedCatId] = useState("martin");
   const [extraCats, setExtraCats] = useState(() => JSON.parse(localStorage.getItem("rucats-cats") || "[]"));
-  const [newCatDraft, setNewCatDraft] = useState({ name: "", age: "", breed: "", bio: "" });
+  const [newCatDraft, setNewCatDraft] = useState({ name: "", age: "", breed: "", bio: "", image: "" });
   const [userProfile, setUserProfile] = useState(() => JSON.parse(localStorage.getItem("rucats-user-profile") || 'null') || { name: "Амир", bio: "Люблю котов, уютные вечера и хорошие истории.", city: "Москва" });
   const [catProfile, setCatProfile] = useState(() => JSON.parse(localStorage.getItem("rucats-cat-profile") || 'null') || { name: "Мартин", age: "1 год", bio: "Любит солнечные подоконники, коробки и командовать." });
   const [editDraft, setEditDraft] = useState(null);
@@ -150,12 +150,20 @@ function App() {
     setShowComposer(false);
   };
 
+  const handleNewCatImage = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setNewCatDraft((current) => ({ ...current, image: reader.result }));
+    reader.readAsDataURL(file);
+  };
+
   const addCat = (event) => {
     event.preventDefault();
     if (!newCatDraft.name.trim()) return;
-    const newCat = { id: `cat-${Date.now()}`, name: newCatDraft.name.trim(), age: newCatDraft.age.trim() || "возраст не указан", breed: newCatDraft.breed.trim() || "порода не указана", bio: newCatDraft.bio.trim() || "Новый пушистый житель rucats.", image: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=420&q=85" };
+    const newCat = { id: `cat-${Date.now()}`, name: newCatDraft.name.trim(), age: newCatDraft.age.trim() || "возраст не указан", breed: newCatDraft.breed.trim() || "порода не указана", bio: newCatDraft.bio.trim() || "Новый пушистый житель rucats.", image: newCatDraft.image || "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=420&q=85" };
     setExtraCats((current) => [...current, newCat]);
-    setNewCatDraft({ name: "", age: "", breed: "", bio: "" });
+    setNewCatDraft({ name: "", age: "", breed: "", bio: "", image: "" });
     setShowAddCat(false);
   };
 
@@ -453,6 +461,12 @@ function App() {
               </div>
               <label className="field-label" htmlFor="new-cat-bio">О коте</label>
               <textarea id="new-cat-bio" value={newCatDraft.bio} onChange={(event) => setNewCatDraft((current) => ({ ...current, bio: event.target.value }))} rows="3" placeholder="Какой у него характер?" />
+              <label className="upload-field cat-photo-upload">
+                <input type="file" accept="image/*" onChange={handleNewCatImage} />
+                <Camera size={18} />
+                <span>{newCatDraft.image ? "Фото выбрано — заменить" : "Добавить фото кота"}</span>
+              </label>
+              {newCatDraft.image && <img className="upload-preview cat-upload-preview" src={newCatDraft.image} alt="Предпросмотр фото кота" />}
               <div className="modal-footer"><button type="button" className="modal-cancel" onClick={() => setShowAddCat(false)}>Отмена</button><button type="submit" className="modal-submit" disabled={!newCatDraft.name.trim()}>Добавить кота</button></div>
             </form>
           </section>
