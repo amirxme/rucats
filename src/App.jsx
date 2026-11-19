@@ -307,13 +307,13 @@ function App() {
                     <button className="profile-edit-button" onClick={() => openProfileEditor("user")}><Pencil size={16} /> Редактировать</button>
                   </div>
                   <div className="profile-stats">
-                    <div><strong>1</strong><span>кот</span></div>
+                    <div><strong>{cats.length}</strong><span>кот{cats.length === 1 ? "" : "а"}</span></div>
                     <div><strong>{postsState.filter((post) => post.author === "Амир").length}</strong><span>публикаций</span></div>
                     <div><strong>0</strong><span>подписчиков</span></div>
                   </div>
                   <div className="profile-section-title"><div><h2>Мои коты</h2><p>Пушистые хозяева этого профиля</p></div></div>
-                  <button className="featured-cat-card" onClick={() => setProfileView("cat")}>
-                    <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=300&q=85" alt="Мартин" />
+                  <button className="featured-cat-card" onClick={() => { setSelectedCatId("martin"); setProfileView("cat"); }}>
+                    <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=300&q=85" alt={catProfile.name} />
                     <span><strong>{catProfile.name}</strong><small>мой главный босс · {catProfile.age}</small></span>
                     <ArrowLeft className="cat-card-arrow" size={18} />
                   </button>
@@ -336,11 +336,11 @@ function App() {
                     <button className="profile-edit-button" onClick={() => openProfileEditor("cat")}><Pencil size={16} /> Изменить</button>
                   </div>
                   <div className="profile-stats">
-                    <div><strong>1</strong><span>год</span></div>
+                    <div><strong>{activeCat.age}</strong><span>возраст</span></div>
                     <div><strong>{postsState.length}</strong><span>историй</span></div>
                     <div><strong>{activeCat.name}</strong><span>имя</span></div>
                   </div>
-                  <div className="profile-section-title"><div><h2>Истории Мартина</h2><p>Всё самое важное о главном боссе</p></div><Grid3X3 size={19} /></div>
+                  <div className="profile-section-title"><div><h2>Истории {activeCat.name}</h2><p>Всё самое важное о главном боссе</p></div><Grid3X3 size={19} /></div>
                   <div className="profile-post-grid">
                     {postsState.map((post) => <img key={post.id} src={post.image} alt={post.text} />)}
                   </div>
@@ -479,7 +479,7 @@ function App() {
             <div className="modal-header">
               <div>
                 <p className="eyebrow">Настройки профиля</p>
-                <h2 id="edit-profile-title">{editDraft.type === "user" ? "Редактировать профиль" : "Редактировать Мартина"}</h2>
+                <h2 id="edit-profile-title">{editDraft.type === "user" ? "Редактировать профиль" : `Редактировать ${activeCat.name}`}</h2>
               </div>
               <button className="modal-close" aria-label="Закрыть" onClick={() => setShowEditProfile(false)}><X size={20} /></button>
             </div>
