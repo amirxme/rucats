@@ -1,18 +1,22 @@
 import { useState } from "react";
 import {
+  ArrowLeft,
   Bell,
   Bookmark,
   Camera,
   Cat,
   Compass,
+  MapPin,
   Heart,
   Home,
   Menu,
+  Pencil,
   MessageCircle,
   MoreHorizontal,
   PawPrint,
   Plus,
   Search,
+  Grid3X3,
   Share2,
   Sparkles,
   UserRound,
@@ -56,6 +60,7 @@ function App() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
   const [draft, setDraft] = useState({ text: "", cat: "Мартин", image: "" });
+  const [profileView, setProfileView] = useState(null);
 
   const toggleLike = (postId) => {
     setPostsState((currentPosts) =>
@@ -143,7 +148,7 @@ function App() {
         <div className="sidebar-section sidebar-section--cats">
           <p className="sidebar-label">Мои коты</p>
 
-          <button className="cat-profile">
+          <button className="cat-profile" onClick={() => setProfileView("cat")}>
             <img
               src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=120&q=85"
               alt="Кот Мартин"
@@ -173,7 +178,7 @@ function App() {
             <button aria-label="Открыть кота дня">→</button>
           </div>
 
-          <button className="profile-link">
+          <button className="profile-link" onClick={() => setProfileView("user")}>
             <div className="profile-avatar">А</div>
             <span>
               <strong>Амир</strong>
@@ -225,6 +230,68 @@ function App() {
         </header>
 
         <div className="content-column">
+          {profileView ? (
+            <section className="profile-page">
+              <button className="back-button" onClick={() => setProfileView(null)}>
+                <ArrowLeft size={17} /> Назад к ленте
+              </button>
+
+              {profileView === "user" ? (
+                <>
+                  <div className="profile-hero">
+                    <div className="profile-large-avatar">А</div>
+                    <div className="profile-identity">
+                      <p className="eyebrow">Профиль участника</p>
+                      <h1>Амир</h1>
+                      <p className="profile-handle">@amirxme</p>
+                      <p className="profile-bio">Люблю котов, уютные вечера и хорошие истории.</p>
+                      <div className="profile-meta"><MapPin size={14} /> Москва <span>·</span> на rucats недавно</div>
+                    </div>
+                    <button className="profile-edit-button"><Pencil size={16} /> Редактировать</button>
+                  </div>
+                  <div className="profile-stats">
+                    <div><strong>1</strong><span>кот</span></div>
+                    <div><strong>{postsState.filter((post) => post.author === "Амир").length}</strong><span>публикаций</span></div>
+                    <div><strong>0</strong><span>подписчиков</span></div>
+                  </div>
+                  <div className="profile-section-title"><div><h2>Мои коты</h2><p>Пушистые хозяева этого профиля</p></div></div>
+                  <button className="featured-cat-card" onClick={() => setProfileView("cat")}>
+                    <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=300&q=85" alt="Мартин" />
+                    <span><strong>Мартин</strong><small>мой главный босс · 1 год</small></span>
+                    <ArrowLeft className="cat-card-arrow" size={18} />
+                  </button>
+                  <div className="profile-section-title profile-section-title--posts"><div><h2>Мои публикации</h2><p>Истории, которыми я поделился</p></div><Grid3X3 size={19} /></div>
+                  <div className="profile-post-grid">
+                    {postsState.filter((post) => post.author === "Амир").length ? postsState.filter((post) => post.author === "Амир").map((post) => <img key={post.id} src={post.image} alt={post.text} />) : <div className="profile-empty">Твои новые истории появятся здесь</div>}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="profile-hero profile-hero--cat">
+                    <img className="cat-profile-large" src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=420&q=85" alt="Мартин" />
+                    <div className="profile-identity">
+                      <p className="eyebrow">Профиль кота</p>
+                      <h1>Мартин</h1>
+                      <p className="profile-handle">главный босс дома</p>
+                      <p className="profile-bio">Любит солнечные подоконники, коробки и командовать.</p>
+                      <div className="profile-meta"><MapPin size={14} /> Москва <span>·</span> 1 год</div>
+                    </div>
+                    <button className="profile-edit-button"><Pencil size={16} /> Изменить</button>
+                  </div>
+                  <div className="profile-stats">
+                    <div><strong>1</strong><span>год</span></div>
+                    <div><strong>{postsState.length}</strong><span>историй</span></div>
+                    <div><strong>Мартин</strong><span>имя</span></div>
+                  </div>
+                  <div className="profile-section-title"><div><h2>Истории Мартина</h2><p>Всё самое важное о главном боссе</p></div><Grid3X3 size={19} /></div>
+                  <div className="profile-post-grid">
+                    {postsState.map((post) => <img key={post.id} src={post.image} alt={post.text} />)}
+                  </div>
+                </>
+              )}
+            </section>
+          ) : (
+          <>
           <section className="welcome-block">
             <div>
               <p className="eyebrow">Четверг, 19 ноября</p>
@@ -316,6 +383,8 @@ function App() {
           <div className="load-more">
             <button>Показать ещё истории</button>
           </div>
+          </>
+          )}
         </div>
       </main>
 
