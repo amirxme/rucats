@@ -16,6 +16,7 @@ import {
   Share2,
   Sparkles,
   UserRound,
+  X,
 } from "lucide-react";
 
 const posts = [
@@ -53,6 +54,8 @@ function App() {
   const [activeNav, setActiveNav] = useState("Лента");
   const [postsState, setPostsState] = useState(posts);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showComposer, setShowComposer] = useState(false);
+  const [draft, setDraft] = useState({ text: "", cat: "Мартин", image: "" });
 
   const toggleLike = (postId) => {
     setPostsState((currentPosts) =>
@@ -66,6 +69,39 @@ function App() {
           : post
       )
     );
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setDraft((current) => ({
+      ...current,
+      image: URL.createObjectURL(file),
+    }));
+  };
+
+  const publishPost = (event) => {
+    event.preventDefault();
+    const text = draft.text.trim();
+    if (!text && !draft.image) return;
+
+    setPostsState((currentPosts) => [
+      {
+        id: Date.now(),
+        author: "Амир",
+        handle: "@amirxme",
+        time: "только что",
+        avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=160&q=85",
+        image: draft.image || "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1200&q=85",
+        text: text || "Мой кот сегодня снова главный босс.",
+        likes: 0,
+        comments: 0,
+        liked: false,
+      },
+      ...currentPosts,
+    ]);
+    setDraft({ text: "", cat: "Мартин", image: "" });
+    setShowComposer(false);
   };
 
   const navigation = [
@@ -181,7 +217,7 @@ function App() {
               <Bell size={20} />
               <span className="notification-dot" />
             </button>
-            <button className="publish-button">
+            <button className="publish-button" onClick={() => setShowComposer(true)}>
               <Plus size={18} />
               <span>Опубликовать</span>
             </button>
@@ -207,10 +243,10 @@ function App() {
 
           <section className="composer-card">
             <div className="composer-avatar">А</div>
-            <button className="composer-placeholder">
+            <button className="composer-placeholder" onClick={() => setShowComposer(true)}>
               Расскажи, что сегодня вытворяет твой кот...
             </button>
-            <button className="composer-camera" aria-label="Добавить фото">
+            <button className="composer-camera" aria-label="Добавить фото" onClick={() => setShowComposer(true)}>
               <Camera size={19} />
             </button>
           </section>
@@ -282,6 +318,55 @@ function App() {
           </div>
         </div>
       </main>
+
+      {showComposer && (
+        <div className="modal-backdrop" onMouseDown={() => setShowComposer(false)}>
+          <section className="composer-modal" role="dialog" aria-modal="true" aria-labelledby="composer-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">Новая история</p>
+                <h2 id="composer-title">Расскажи про своего кота</h2>
+              </div>
+              <button className="modal-close" aria-label="Закрыть" onClick={() => setShowComposer(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={publishPost}>
+              <label className="field-label" htmlFor="post-text">Текст поста</label>
+              <textarea
+                id="post-text"
+                value={draft.text}
+                onChange={(event) => setDraft((current) => ({ ...current, text: event.target.value }))}
+                placeholder="Что сегодня вытворяет Мартин?"
+                rows="4"
+              />
+
+              <div className="modal-form-row">
+                <div className="select-field">
+                  <label className="field-label" htmlFor="post-cat">Кот</label>
+                  <select id="post-cat" value={draft.cat} onChange={(event) => setDraft((current) => ({ ...current, cat: event.target.value }))}>
+                    <option>Мартин</option>
+                    <option>Другой кот</option>
+                  </select>
+                </div>
+                <label className="upload-field">
+                  <input type="file" accept="image/*" onChange={handleImageChange} />
+                  <Camera size={18} />
+                  <span>{draft.image ? "Фото выбрано" : "Добавить фото"}</span>
+                </label>
+              </div>
+
+              {draft.image && <img className="upload-preview" src={draft.image} alt="Предпросмотр публикации" />}
+
+              <div className="modal-footer">
+                <button type="button" className="modal-cancel" onClick={() => setShowComposer(false)}>Отмена</button>
+                <button type="submit" className="modal-submit" disabled={!draft.text.trim() && !draft.image}>Опубликовать</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
