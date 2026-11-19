@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Bell,
@@ -61,6 +61,34 @@ function App() {
   const [showComposer, setShowComposer] = useState(false);
   const [draft, setDraft] = useState({ text: "", cat: "Мартин", image: "" });
   const [profileView, setProfileView] = useState(null);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [userProfile, setUserProfile] = useState(() => JSON.parse(localStorage.getItem("rucats-user-profile") || 'null') || { name: "Амир", bio: "Люблю котов, уютные вечера и хорошие истории.", city: "Москва" });
+  const [catProfile, setCatProfile] = useState(() => JSON.parse(localStorage.getItem("rucats-cat-profile") || 'null') || { name: "Мартин", age: "1 год", bio: "Любит солнечные подоконники, коробки и командовать." });
+  const [editDraft, setEditDraft] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem("rucats-user-profile", JSON.stringify(userProfile));
+  }, [userProfile]);
+
+  useEffect(() => {
+    localStorage.setItem("rucats-cat-profile", JSON.stringify(catProfile));
+  }, [catProfile]);
+
+  const openProfileEditor = (type) => {
+    setEditDraft(type === "user" ? { type, ...userProfile } : { type, ...catProfile });
+    setShowEditProfile(true);
+  };
+
+  const saveProfile = (event) => {
+    event.preventDefault();
+    if (editDraft.type === "user") {
+      setUserProfile({ name: editDraft.name.trim() || "Амир", bio: editDraft.bio.trim(), city: editDraft.city.trim() || "Москва" });
+    } else {
+      setCatProfile({ name: editDraft.name.trim() || "Мартин", age: editDraft.age.trim() || "1 год", bio: editDraft.bio.trim() });
+    }
+    setShowEditProfile(false);
+    setEditDraft(null);
+  };
 
   const toggleLike = (postId) => {
     setPostsState((currentPosts) =>
@@ -154,7 +182,7 @@ function App() {
               alt="Кот Мартин"
             />
             <span>
-              <strong>Мартин</strong>
+              <strong>{catProfile.name}</strong>
               <small>мой главный босс</small>
             </span>
             <MoreHorizontal size={17} />
@@ -181,7 +209,7 @@ function App() {
           <button className="profile-link" onClick={() => setProfileView("user")}>
             <div className="profile-avatar">А</div>
             <span>
-              <strong>Амир</strong>
+              <strong>{userProfile.name}</strong>
               <small>мой профиль</small>
             </span>
             <MoreHorizontal size={17} />
@@ -242,12 +270,12 @@ function App() {
                     <div className="profile-large-avatar">А</div>
                     <div className="profile-identity">
                       <p className="eyebrow">Профиль участника</p>
-                      <h1>Амир</h1>
+                      <h1>{userProfile.name}</h1>
                       <p className="profile-handle">@amirxme</p>
-                      <p className="profile-bio">Люблю котов, уютные вечера и хорошие истории.</p>
-                      <div className="profile-meta"><MapPin size={14} /> Москва <span>·</span> на rucats недавно</div>
+                      <p className="profile-bio">{userProfile.bio}</p>
+                      <div className="profile-meta"><MapPin size={14} /> {userProfile.city} <span>·</span> на rucats недавно</div>
                     </div>
-                    <button className="profile-edit-button"><Pencil size={16} /> Редактировать</button>
+                    <button className="profile-edit-button" onClick={() => openProfileEditor("user")}><Pencil size={16} /> Редактировать</button>
                   </div>
                   <div className="profile-stats">
                     <div><strong>1</strong><span>кот</span></div>
@@ -257,7 +285,7 @@ function App() {
                   <div className="profile-section-title"><div><h2>Мои коты</h2><p>Пушистые хозяева этого профиля</p></div></div>
                   <button className="featured-cat-card" onClick={() => setProfileView("cat")}>
                     <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=300&q=85" alt="Мартин" />
-                    <span><strong>Мартин</strong><small>мой главный босс · 1 год</small></span>
+                    <span><strong>{catProfile.name}</strong><small>мой главный босс · {catProfile.age}</small></span>
                     <ArrowLeft className="cat-card-arrow" size={18} />
                   </button>
                   <div className="profile-section-title profile-section-title--posts"><div><h2>Мои публикации</h2><p>Истории, которыми я поделился</p></div><Grid3X3 size={19} /></div>
@@ -271,17 +299,17 @@ function App() {
                     <img className="cat-profile-large" src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=420&q=85" alt="Мартин" />
                     <div className="profile-identity">
                       <p className="eyebrow">Профиль кота</p>
-                      <h1>Мартин</h1>
+                      <h1>{catProfile.name}</h1>
                       <p className="profile-handle">главный босс дома</p>
-                      <p className="profile-bio">Любит солнечные подоконники, коробки и командовать.</p>
-                      <div className="profile-meta"><MapPin size={14} /> Москва <span>·</span> 1 год</div>
+                      <p className="profile-bio">{catProfile.bio}</p>
+                      <div className="profile-meta"><MapPin size={14} /> {userProfile.city} <span>·</span> {catProfile.age}</div>
                     </div>
-                    <button className="profile-edit-button"><Pencil size={16} /> Изменить</button>
+                    <button className="profile-edit-button" onClick={() => openProfileEditor("cat")}><Pencil size={16} /> Изменить</button>
                   </div>
                   <div className="profile-stats">
                     <div><strong>1</strong><span>год</span></div>
                     <div><strong>{postsState.length}</strong><span>историй</span></div>
-                    <div><strong>Мартин</strong><span>имя</span></div>
+                    <div><strong>{catProfile.name}</strong><span>имя</span></div>
                   </div>
                   <div className="profile-section-title"><div><h2>Истории Мартина</h2><p>Всё самое важное о главном боссе</p></div><Grid3X3 size={19} /></div>
                   <div className="profile-post-grid">
@@ -387,6 +415,41 @@ function App() {
           )}
         </div>
       </main>
+
+      {showEditProfile && editDraft && (
+        <div className="modal-backdrop" onMouseDown={() => setShowEditProfile(false)}>
+          <section className="composer-modal profile-editor-modal" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <p className="eyebrow">Настройки профиля</p>
+                <h2 id="edit-profile-title">{editDraft.type === "user" ? "Редактировать профиль" : "Редактировать Мартина"}</h2>
+              </div>
+              <button className="modal-close" aria-label="Закрыть" onClick={() => setShowEditProfile(false)}><X size={20} /></button>
+            </div>
+            <form onSubmit={saveProfile}>
+              <label className="field-label" htmlFor="edit-name">{editDraft.type === "user" ? "Имя" : "Имя кота"}</label>
+              <input className="profile-input" id="edit-name" value={editDraft.name} onChange={(event) => setEditDraft((current) => ({ ...current, name: event.target.value }))} />
+              {editDraft.type === "user" ? (
+                <>
+                  <label className="field-label" htmlFor="edit-city">Город</label>
+                  <input className="profile-input" id="edit-city" value={editDraft.city} onChange={(event) => setEditDraft((current) => ({ ...current, city: event.target.value }))} />
+                </>
+              ) : (
+                <>
+                  <label className="field-label" htmlFor="edit-age">Возраст</label>
+                  <input className="profile-input" id="edit-age" value={editDraft.age} onChange={(event) => setEditDraft((current) => ({ ...current, age: event.target.value }))} />
+                </>
+              )}
+              <label className="field-label" htmlFor="edit-bio">Описание</label>
+              <textarea id="edit-bio" value={editDraft.bio} onChange={(event) => setEditDraft((current) => ({ ...current, bio: event.target.value }))} rows="4" />
+              <div className="modal-footer">
+                <button type="button" className="modal-cancel" onClick={() => setShowEditProfile(false)}>Отмена</button>
+                <button type="submit" className="modal-submit">Сохранить</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
 
       {showComposer && (
         <div className="modal-backdrop" onMouseDown={() => setShowComposer(false)}>
