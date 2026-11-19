@@ -841,6 +841,7 @@ h1 span {
 .profile-section-title p { margin: 0; color: var(--muted); font-size: 12px; }
 .profile-section-title > svg { color: #b6aaa0; }
 .profile-section-title--posts { margin-top: 35px; }
+.profile-cats-list { display: grid; gap: 10px; }
 .featured-cat-card { display: flex; align-items: center; width: 100%; gap: 13px; padding: 10px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); text-align: left; }
 .featured-cat-card:hover { border-color: #f0c7ba; transform: translateY(-1px); }
 .featured-cat-card img { width: 52px; height: 52px; border-radius: 15px; object-fit: cover; }

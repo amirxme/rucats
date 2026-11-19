@@ -312,11 +312,15 @@ function App() {
                     <div><strong>0</strong><span>подписчиков</span></div>
                   </div>
                   <div className="profile-section-title"><div><h2>Мои коты</h2><p>Пушистые хозяева этого профиля</p></div></div>
-                  <button className="featured-cat-card" onClick={() => { setSelectedCatId("martin"); setProfileView("cat"); }}>
-                    <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=300&q=85" alt={catProfile.name} />
-                    <span><strong>{catProfile.name}</strong><small>мой главный босс · {catProfile.age}</small></span>
-                    <ArrowLeft className="cat-card-arrow" size={18} />
-                  </button>
+                  <div className="profile-cats-list">
+                    {cats.map((cat) => (
+                      <button className="featured-cat-card" key={cat.id} onClick={() => { setSelectedCatId(cat.id); setProfileView("cat"); }}>
+                        <img src={cat.image} alt={cat.name} />
+                        <span><strong>{cat.name}</strong><small>{cat.id === "martin" ? "мой главный босс" : cat.breed} · {cat.age}</small></span>
+                        <ArrowLeft className="cat-card-arrow" size={18} />
+                      </button>
+                    ))}
+                  </div>
                   <div className="profile-section-title profile-section-title--posts"><div><h2>Мои публикации</h2><p>Истории, которыми я поделился</p></div><Grid3X3 size={19} /></div>
                   <div className="profile-post-grid">
                     {postsState.filter((post) => post.author === "Амир").length ? postsState.filter((post) => post.author === "Амир").map((post) => <img key={post.id} src={post.image} alt={post.text} />) : <div className="profile-empty">Твои новые истории появятся здесь</div>}
