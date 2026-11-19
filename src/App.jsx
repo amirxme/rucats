@@ -62,6 +62,10 @@ function App() {
   const [draft, setDraft] = useState({ text: "", cat: "Мартин", image: "" });
   const [profileView, setProfileView] = useState(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showAddCat, setShowAddCat] = useState(false);
+  const [selectedCatId, setSelectedCatId] = useState("martin");
+  const [extraCats, setExtraCats] = useState(() => JSON.parse(localStorage.getItem("rucats-cats") || "[]"));
+  const [newCatDraft, setNewCatDraft] = useState({ name: "", age: "", breed: "", bio: "" });
   const [userProfile, setUserProfile] = useState(() => JSON.parse(localStorage.getItem("rucats-user-profile") || 'null') || { name: "Амир", bio: "Люблю котов, уютные вечера и хорошие истории.", city: "Москва" });
   const [catProfile, setCatProfile] = useState(() => JSON.parse(localStorage.getItem("rucats-cat-profile") || 'null') || { name: "Мартин", age: "1 год", bio: "Любит солнечные подоконники, коробки и командовать." });
   const [editDraft, setEditDraft] = useState(null);
@@ -74,8 +78,15 @@ function App() {
     localStorage.setItem("rucats-cat-profile", JSON.stringify(catProfile));
   }, [catProfile]);
 
+  useEffect(() => {
+    localStorage.setItem("rucats-cats", JSON.stringify(extraCats));
+  }, [extraCats]);
+
+  const cats = [{ id: "martin", ...catProfile, image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=420&q=85" }, ...extraCats];
+  const activeCat = cats.find((cat) => cat.id === selectedCatId) || cats[0];
+
   const openProfileEditor = (type) => {
-    setEditDraft(type === "user" ? { type, ...userProfile } : { type, ...catProfile });
+    setEditDraft(type === "user" ? { type, ...userProfile } : { type, ...activeCat });
     setShowEditProfile(true);
   };
 
@@ -84,7 +95,9 @@ function App() {
     if (editDraft.type === "user") {
       setUserProfile({ name: editDraft.name.trim() || "Амир", bio: editDraft.bio.trim(), city: editDraft.city.trim() || "Москва" });
     } else {
-      setCatProfile({ name: editDraft.name.trim() || "Мартин", age: editDraft.age.trim() || "1 год", bio: editDraft.bio.trim() });
+      const updatedCat = { ...activeCat, name: editDraft.name.trim() || activeCat.name, age: editDraft.age.trim() || activeCat.age, breed: editDraft.breed || activeCat.breed, bio: editDraft.bio.trim() };
+      if (activeCat.id === "martin") setCatProfile({ name: updatedCat.name, age: updatedCat.age, bio: updatedCat.bio });
+      else setExtraCats((current) => current.map((cat) => cat.id === activeCat.id ? updatedCat : cat));
     }
     setShowEditProfile(false);
     setEditDraft(null);
@@ -137,6 +150,15 @@ function App() {
     setShowComposer(false);
   };
 
+  const addCat = (event) => {
+    event.preventDefault();
+    if (!newCatDraft.name.trim()) return;
+    const newCat = { id: `cat-${Date.now()}`, name: newCatDraft.name.trim(), age: newCatDraft.age.trim() || "возраст не указан", breed: newCatDraft.breed.trim() || "порода не указана", bio: newCatDraft.bio.trim() || "Новый пушистый житель rucats.", image: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=420&q=85" };
+    setExtraCats((current) => [...current, newCat]);
+    setNewCatDraft({ name: "", age: "", breed: "", bio: "" });
+    setShowAddCat(false);
+  };
+
   const navigation = [
     { label: "Лента", icon: Home },
     { label: "Обзор", icon: Compass },
@@ -176,19 +198,18 @@ function App() {
         <div className="sidebar-section sidebar-section--cats">
           <p className="sidebar-label">Мои коты</p>
 
-          <button className="cat-profile" onClick={() => setProfileView("cat")}>
-            <img
-              src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=120&q=85"
-              alt="Кот Мартин"
-            />
-            <span>
-              <strong>{catProfile.name}</strong>
-              <small>мой главный босс</small>
-            </span>
-            <MoreHorizontal size={17} />
-          </button>
+          {cats.map((cat) => (
+            <button className="cat-profile" key={cat.id} onClick={() => { setSelectedCatId(cat.id); setProfileView("cat"); }}>
+              <img src={cat.image} alt={`Кот ${cat.name}`} />
+              <span>
+                <strong>{cat.name}</strong>
+                <small>{cat.id === "martin" ? "мой главный босс" : cat.breed}</small>
+              </span>
+              <MoreHorizontal size={17} />
+            </button>
+          ))}
 
-          <button className="add-cat-button">
+          <button className="add-cat-button" onClick={() => setShowAddCat(true)}>
             <span className="add-cat-icon">
               <Plus size={17} />
             </span>
@@ -296,20 +317,20 @@ function App() {
               ) : (
                 <>
                   <div className="profile-hero profile-hero--cat">
-                    <img className="cat-profile-large" src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=420&q=85" alt="Мартин" />
+                    <img className="cat-profile-large" src={activeCat.image} alt={activeCat.name} />
                     <div className="profile-identity">
                       <p className="eyebrow">Профиль кота</p>
-                      <h1>{catProfile.name}</h1>
+                      <h1>{activeCat.name}</h1>
                       <p className="profile-handle">главный босс дома</p>
-                      <p className="profile-bio">{catProfile.bio}</p>
-                      <div className="profile-meta"><MapPin size={14} /> {userProfile.city} <span>·</span> {catProfile.age}</div>
+                      <p className="profile-bio">{activeCat.bio}</p>
+                      <div className="profile-meta"><MapPin size={14} /> {userProfile.city} <span>·</span> {activeCat.age}</div>
                     </div>
                     <button className="profile-edit-button" onClick={() => openProfileEditor("cat")}><Pencil size={16} /> Изменить</button>
                   </div>
                   <div className="profile-stats">
                     <div><strong>1</strong><span>год</span></div>
                     <div><strong>{postsState.length}</strong><span>историй</span></div>
-                    <div><strong>{catProfile.name}</strong><span>имя</span></div>
+                    <div><strong>{activeCat.name}</strong><span>имя</span></div>
                   </div>
                   <div className="profile-section-title"><div><h2>Истории Мартина</h2><p>Всё самое важное о главном боссе</p></div><Grid3X3 size={19} /></div>
                   <div className="profile-post-grid">
@@ -415,6 +436,28 @@ function App() {
           )}
         </div>
       </main>
+
+      {showAddCat && (
+        <div className="modal-backdrop" onMouseDown={() => setShowAddCat(false)}>
+          <section className="composer-modal profile-editor-modal" role="dialog" aria-modal="true" aria-labelledby="add-cat-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div><p className="eyebrow">Новый житель</p><h2 id="add-cat-title">Добавить кота</h2></div>
+              <button className="modal-close" aria-label="Закрыть" onClick={() => setShowAddCat(false)}><X size={20} /></button>
+            </div>
+            <form onSubmit={addCat}>
+              <label className="field-label" htmlFor="new-cat-name">Имя кота</label>
+              <input className="profile-input" id="new-cat-name" value={newCatDraft.name} onChange={(event) => setNewCatDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Например, Сёма" autoFocus />
+              <div className="modal-form-row">
+                <div><label className="field-label" htmlFor="new-cat-age">Возраст</label><input className="profile-input" id="new-cat-age" value={newCatDraft.age} onChange={(event) => setNewCatDraft((current) => ({ ...current, age: event.target.value }))} placeholder="2 года" /></div>
+                <div><label className="field-label" htmlFor="new-cat-breed">Порода</label><input className="profile-input" id="new-cat-breed" value={newCatDraft.breed} onChange={(event) => setNewCatDraft((current) => ({ ...current, breed: event.target.value }))} placeholder="Британец" /></div>
+              </div>
+              <label className="field-label" htmlFor="new-cat-bio">О коте</label>
+              <textarea id="new-cat-bio" value={newCatDraft.bio} onChange={(event) => setNewCatDraft((current) => ({ ...current, bio: event.target.value }))} rows="3" placeholder="Какой у него характер?" />
+              <div className="modal-footer"><button type="button" className="modal-cancel" onClick={() => setShowAddCat(false)}>Отмена</button><button type="submit" className="modal-submit" disabled={!newCatDraft.name.trim()}>Добавить кота</button></div>
+            </form>
+          </section>
+        </div>
+      )}
 
       {showEditProfile && editDraft && (
         <div className="modal-backdrop" onMouseDown={() => setShowEditProfile(false)}>
