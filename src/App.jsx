@@ -10,6 +10,7 @@ import {
   Heart,
   Home,
   Menu,
+  Moon,
   Pencil,
   MessageCircle,
   MoreHorizontal,
@@ -21,6 +22,7 @@ import {
   Sparkles,
   UserRound,
   X,
+  Sun,
 } from "lucide-react";
 
 const posts = [
@@ -60,6 +62,7 @@ const posts = [
 
 function App() {
   const [activeNav, setActiveNav] = useState("Лента");
+  const [theme, setTheme] = useState(() => localStorage.getItem("rucats-theme") || "light");
   const [postsState, setPostsState] = useState(() => JSON.parse(localStorage.getItem("rucats-posts") || "null") || posts);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
@@ -89,6 +92,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem("rucats-posts", JSON.stringify(postsState));
   }, [postsState]);
+
+  useEffect(() => {
+    localStorage.setItem("rucats-theme", theme);
+  }, [theme]);
 
   const cats = [{ id: "martin", ...catProfile, image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=420&q=85" }, ...extraCats];
   const activeCat = cats.find((cat) => cat.id === selectedCatId) || cats[0];
@@ -196,7 +203,7 @@ function App() {
     : postsState;
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${theme === "dark" ? "app-shell--dark" : ""}`}>
       <aside className={`sidebar ${showMobileMenu ? "sidebar--open" : ""}`}>
         <div className="brand">
           <div className="brand-mark">
@@ -297,6 +304,9 @@ function App() {
           </div>
 
           <div className="topbar-actions">
+            <button className="icon-button theme-toggle" aria-label={theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"} onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}>
+              {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
+            </button>
             <button className="icon-button" aria-label="Уведомления">
               <Bell size={20} />
               <span className="notification-dot" />

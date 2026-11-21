@@ -877,3 +877,92 @@ h1 span {
 
 .cat-photo-upload { margin-top: 16px; }
 .cat-upload-preview { height: 135px; margin-top: 12px; }
+
+
+.app-shell {
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.app-shell--dark {
+  --cream: #1d1815;
+  --paper: #29221e;
+  --ink: #f5ebe3;
+  --muted: #b5a79d;
+  --line: #443932;
+  --soft: #352b26;
+  --coral: #ef896f;
+  --coral-light: #4b2d27;
+  --brown: #e3b8a2;
+  --shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+  background: var(--cream);
+  color: var(--ink);
+}
+
+.app-shell--dark .sidebar {
+  background: #241d19;
+}
+
+.app-shell--dark .topbar {
+  background: rgba(29, 24, 21, 0.92);
+}
+
+.app-shell--dark .search-box,
+.app-shell--dark .mobile-menu-button,
+.app-shell--dark .composer-modal textarea,
+.app-shell--dark .composer-modal select,
+.app-shell--dark .profile-input {
+  color: var(--ink);
+  background: #2d2521;
+  border-color: var(--line);
+}
+
+.app-shell--dark .search-box input,
+.app-shell--dark .search-box input::placeholder {
+  color: var(--muted);
+}
+
+.app-shell--dark .search-box svg,
+.app-shell--dark .icon-button,
+.app-shell--dark .nav-item,
+.app-shell--dark .post-more,
+.app-shell--dark .image-save-button {
+  color: #c9b9af;
+}
+
+.app-shell--dark .nav-item--active,
+.app-shell--dark .nav-item:hover {
+  color: var(--coral);
+  background: var(--coral-light);
+}
+
+.app-shell--dark .daily-note {
+  background: #3b2d22;
+}
+
+.app-shell--dark .profile-empty,
+.app-shell--dark .modal-cancel,
+.app-shell--dark .profile-edit-button {
+  color: var(--brown);
+  background: var(--soft);
+}
+
+.app-shell--dark .featured-cat-card,
+.app-shell--dark .post-card,
+.app-shell--dark .composer-card {
+  background: var(--paper);
+  border-color: var(--line);
+}
+
+.app-shell--dark .upload-field {
+  background: var(--coral-light);
+}
+
+.app-shell--dark .theme-toggle {
+  color: #f3c66f;
+}
+
+@media (max-width: 850px) {
+  .app-shell--dark .mobile-menu-button {
+    background: var(--paper);
+  }
+}
