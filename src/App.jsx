@@ -389,7 +389,7 @@ function App() {
             </section>
           ) : (
           <>
-          <section className="welcome-block">
+          {activeNav === "Лента" && <section className="welcome-block">
             <div>
               <p className="eyebrow">Четверг, 19 ноября</p>
               <h1>Привет, Амир <span>👋</span></h1>
@@ -403,7 +403,7 @@ function App() {
               <div className="decoration-cat">🐈</div>
               <PawPrint className="decoration-paw" size={24} />
             </div>
-          </section>
+          </section>}
 
           {activeNav === "Лента" && (
             <section className="composer-card">
