@@ -211,7 +211,7 @@ function App() {
           <p className="sidebar-label">Мои коты</p>
 
           {cats.map((cat) => (
-            <button className="cat-profile" key={cat.id} onClick={() => { setSelectedCatId(cat.id); setProfileView("cat"); }}>
+            <button className="cat-profile" key={cat.id} onClick={() => { setSelectedCatId(cat.id); setProfileView("cat"); setShowMobileMenu(false); }}>
               <img src={cat.image} alt={`Кот ${cat.name}`} />
               <span>
                 <strong>{cat.name}</strong>
@@ -221,7 +221,7 @@ function App() {
             </button>
           ))}
 
-          <button className="add-cat-button" onClick={() => setShowAddCat(true)}>
+          <button className="add-cat-button" onClick={() => { setShowAddCat(true); setShowMobileMenu(false); }}>
             <span className="add-cat-icon">
               <Plus size={17} />
             </span>
@@ -239,7 +239,7 @@ function App() {
             <button aria-label="Открыть кота дня">→</button>
           </div>
 
-          <button className="profile-link" onClick={() => setProfileView("user")}>
+          <button className="profile-link" onClick={() => { setProfileView("user"); setShowMobileMenu(false); }}>
             <div className="profile-avatar">А</div>
             <span>
               <strong>{userProfile.name}</strong>
