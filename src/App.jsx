@@ -200,7 +200,9 @@ function App() {
 
   const visiblePosts = activeNav === "Сохранённое"
     ? postsState.filter((post) => post.saved)
-    : postsState;
+    : activeNav === "Обзор"
+      ? [...postsState].sort((first, second) => second.likes - first.likes)
+      : postsState;
 
   return (
     <div className={`app-shell ${theme === "dark" ? "app-shell--dark" : ""}`}>
@@ -411,13 +413,27 @@ function App() {
             </button>
           </section>
 
+          {activeNav === "Обзор" && (
+            <section className="overview-card">
+              <div>
+                <p className="eyebrow">Обзор сообщества</p>
+                <h2>Самые популярные истории</h2>
+                <p>Посты, которые сегодня понравились больше всего.</p>
+              </div>
+              <div className="overview-stats">
+                <span><strong>{postsState.length}</strong> историй</span>
+                <span><strong>{postsState.reduce((total, post) => total + post.likes, 0)}</strong> лайков</span>
+              </div>
+            </section>
+          )}
+
           <div className="feed-header">
             <div>
-              <h2>{activeNav === "Сохранённое" ? "Сохранённое" : "Свежие истории"}</h2>
-              <p>{activeNav === "Сохранённое" ? "Посты, которые ты сохранил" : "Самое интересное от сообщества"}</p>
+              <h2>{activeNav === "Сохранённое" ? "Сохранённое" : activeNav === "Обзор" ? "Популярное сегодня" : "Свежие истории"}</h2>
+              <p>{activeNav === "Сохранённое" ? "Посты, которые ты сохранил" : activeNav === "Обзор" ? "Сначала самые любимые истории" : "Самое интересное от сообщества"}</p>
             </div>
             <button className="sort-button">
-              Новые
+              {activeNav === "Обзор" ? "Популярные" : "Новые"}
               <span>⌄</span>
             </button>
           </div>

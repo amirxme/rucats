@@ -966,3 +966,29 @@ h1 span {
     background: var(--paper);
   }
 }
+
+
+.overview-card {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin: -20px 0 34px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, #fff5e9, #fff0eb);
+  border: 1px solid #f2dfd0;
+  border-radius: 20px;
+}
+
+.overview-card .eyebrow { margin-bottom: 8px; }
+.overview-card h2 { margin-bottom: 6px; font-family: "Manrope", sans-serif; font-size: 20px; letter-spacing: -0.7px; }
+.overview-card p:not(.eyebrow) { margin: 0; color: var(--muted); font-size: 12px; }
+.overview-stats { display: flex; flex: 0 0 auto; gap: 18px; color: var(--brown); font-size: 11px; }
+.overview-stats span { display: grid; gap: 4px; white-space: nowrap; }
+.overview-stats strong { color: var(--ink); font-family: "Manrope", sans-serif; font-size: 19px; }
+.app-shell--dark .overview-card { background: linear-gradient(135deg, #3b2d25, #422924); border-color: #5a3b32; }
+
+@media (max-width: 520px) {
+  .overview-card { align-items: flex-start; flex-direction: column; gap: 18px; margin-top: -10px; padding: 19px; }
+  .overview-stats { gap: 25px; }
+}
