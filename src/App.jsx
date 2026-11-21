@@ -132,6 +132,7 @@ function App() {
     event.preventDefault();
     const text = draft.text.trim();
     if (!text && !draft.image) return;
+    const selectedCat = cats.find((cat) => cat.id === draft.catId);
 
     setPostsState((currentPosts) => [
       {
@@ -142,7 +143,7 @@ function App() {
         avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=160&q=85",
         image: draft.image || "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1200&q=85",
         catId: draft.catId,
-        text: text || "Мой кот сегодня снова главный босс.",
+        text: text || `${selectedCat?.name || "Мой кот"} сегодня снова главный босс.`,
         likes: 0,
         comments: 0,
         liked: false,
