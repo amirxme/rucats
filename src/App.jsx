@@ -26,6 +26,7 @@ import {
 const posts = [
   {
     id: 1,
+    catId: "martin",
     author: "Маша и Плюша",
     handle: "@plusha_cat",
     time: "18 минут назад",
@@ -40,6 +41,7 @@ const posts = [
   },
   {
     id: 2,
+    catId: "martin",
     author: "Барсик",
     handle: "@barsik_the_boss",
     time: "1 час назад",
@@ -59,7 +61,7 @@ function App() {
   const [postsState, setPostsState] = useState(posts);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
-  const [draft, setDraft] = useState({ text: "", cat: "Мартин", image: "" });
+  const [draft, setDraft] = useState({ text: "", catId: "martin", image: "" });
   const [profileView, setProfileView] = useState(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAddCat, setShowAddCat] = useState(false);
@@ -139,6 +141,7 @@ function App() {
         time: "только что",
         avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=160&q=85",
         image: draft.image || "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1200&q=85",
+        catId: draft.catId,
         text: text || "Мой кот сегодня снова главный босс.",
         likes: 0,
         comments: 0,
@@ -146,7 +149,7 @@ function App() {
       },
       ...currentPosts,
     ]);
-    setDraft({ text: "", cat: "Мартин", image: "" });
+    setDraft({ text: "", catId: "martin", image: "" });
     setShowComposer(false);
   };
 
@@ -279,7 +282,7 @@ function App() {
               <Bell size={20} />
               <span className="notification-dot" />
             </button>
-            <button className="publish-button" onClick={() => setShowComposer(true)}>
+            <button className="publish-button" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
               <Plus size={18} />
               <span>Опубликовать</span>
             </button>
@@ -346,7 +349,7 @@ function App() {
                   </div>
                   <div className="profile-section-title"><div><h2>Истории {activeCat.name}</h2><p>Всё самое важное о главном боссе</p></div><Grid3X3 size={19} /></div>
                   <div className="profile-post-grid">
-                    {postsState.map((post) => <img key={post.id} src={post.image} alt={post.text} />)}
+                    {postsState.filter((post) => post.catId === activeCat.id).length ? postsState.filter((post) => post.catId === activeCat.id).map((post) => <img key={post.id} src={post.image} alt={post.text} />) : <div className="profile-empty">У {activeCat.name} пока нет историй</div>}
                   </div>
                 </>
               )}
@@ -371,10 +374,10 @@ function App() {
 
           <section className="composer-card">
             <div className="composer-avatar">А</div>
-            <button className="composer-placeholder" onClick={() => setShowComposer(true)}>
+            <button className="composer-placeholder" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
               Расскажи, что сегодня вытворяет твой кот...
             </button>
-            <button className="composer-camera" aria-label="Добавить фото" onClick={() => setShowComposer(true)}>
+            <button className="composer-camera" aria-label="Добавить фото" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
               <Camera size={19} />
             </button>
           </section>
@@ -531,16 +534,15 @@ function App() {
                 id="post-text"
                 value={draft.text}
                 onChange={(event) => setDraft((current) => ({ ...current, text: event.target.value }))}
-                placeholder="Что сегодня вытворяет Мартин?"
+                placeholder={`Что сегодня вытворяет ${cats.find((cat) => cat.id === draft.catId)?.name || "твой кот"}?`}
                 rows="4"
               />
 
               <div className="modal-form-row">
                 <div className="select-field">
                   <label className="field-label" htmlFor="post-cat">Кот</label>
-                  <select id="post-cat" value={draft.cat} onChange={(event) => setDraft((current) => ({ ...current, cat: event.target.value }))}>
-                    <option>Мартин</option>
-                    <option>Другой кот</option>
+                  <select id="post-cat" value={draft.catId} onChange={(event) => setDraft((current) => ({ ...current, catId: event.target.value }))}>
+                    {cats.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                   </select>
                 </div>
                 <label className="upload-field">
