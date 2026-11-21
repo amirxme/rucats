@@ -38,6 +38,7 @@ const posts = [
     likes: 248,
     comments: 18,
     liked: false,
+    saved: false,
   },
   {
     id: 2,
@@ -53,6 +54,7 @@ const posts = [
     likes: 391,
     comments: 27,
     liked: false,
+    saved: false,
   },
 ];
 
@@ -123,6 +125,14 @@ function App() {
     );
   };
 
+  const toggleSaved = (postId) => {
+    setPostsState((currentPosts) =>
+      currentPosts.map((post) =>
+        post.id === postId ? { ...post, saved: !post.saved } : post
+      )
+    );
+  };
+
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -150,6 +160,7 @@ function App() {
         likes: 0,
         comments: 0,
         liked: false,
+        saved: false,
       },
       ...currentPosts,
     ]);
@@ -179,6 +190,10 @@ function App() {
     { label: "Обзор", icon: Compass },
     { label: "Сохранённое", icon: Bookmark },
   ];
+
+  const visiblePosts = activeNav === "Сохранённое"
+    ? postsState.filter((post) => post.saved)
+    : postsState;
 
   return (
     <div className="app-shell">
@@ -388,8 +403,8 @@ function App() {
 
           <div className="feed-header">
             <div>
-              <h2>Свежие истории</h2>
-              <p>Самое интересное от сообщества</p>
+              <h2>{activeNav === "Сохранённое" ? "Сохранённое" : "Свежие истории"}</h2>
+              <p>{activeNav === "Сохранённое" ? "Посты, которые ты сохранил" : "Самое интересное от сообщества"}</p>
             </div>
             <button className="sort-button">
               Новые
@@ -398,7 +413,7 @@ function App() {
           </div>
 
           <div className="feed">
-            {postsState.map((post) => (
+            {visiblePosts.length ? visiblePosts.map((post) => (
               <article className="post-card" key={post.id}>
                 <div className="post-header">
                   <img className="post-avatar" src={post.avatar} alt={post.author} />
@@ -417,8 +432,8 @@ function App() {
 
                 <div className="post-image-wrapper">
                   <img className="post-image" src={post.image} alt={post.text} />
-                  <button className="image-save-button" aria-label="Сохранить">
-                    <Bookmark size={18} />
+                  <button className={`image-save-button ${post.saved ? "image-save-button--saved" : ""}`} aria-label={post.saved ? "Убрать из сохранённых" : "Сохранить"} onClick={() => toggleSaved(post.id)}>
+                    <Bookmark size={18} fill={post.saved ? "currentColor" : "none"} />
                   </button>
                 </div>
 
@@ -445,7 +460,7 @@ function App() {
                   </span>
                 </div>
               </article>
-            ))}
+            )) : <div className="profile-empty">Здесь пока ничего нет. Нажми на закладку у понравившегося поста.</div>}
           </div>
 
           <div className="load-more">
