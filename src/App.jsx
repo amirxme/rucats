@@ -58,7 +58,7 @@ const posts = [
 
 function App() {
   const [activeNav, setActiveNav] = useState("Лента");
-  const [postsState, setPostsState] = useState(posts);
+  const [postsState, setPostsState] = useState(() => JSON.parse(localStorage.getItem("rucats-posts") || "null") || posts);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
   const [draft, setDraft] = useState({ text: "", catId: "martin", image: "" });
@@ -83,6 +83,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem("rucats-cats", JSON.stringify(extraCats));
   }, [extraCats]);
+
+  useEffect(() => {
+    localStorage.setItem("rucats-posts", JSON.stringify(postsState));
+  }, [postsState]);
 
   const cats = [{ id: "martin", ...catProfile, image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=420&q=85" }, ...extraCats];
   const activeCat = cats.find((cat) => cat.id === selectedCatId) || cats[0];
@@ -122,10 +126,9 @@ function App() {
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    setDraft((current) => ({
-      ...current,
-      image: URL.createObjectURL(file),
-    }));
+    const reader = new FileReader();
+    reader.onload = () => setDraft((current) => ({ ...current, image: reader.result }));
+    reader.readAsDataURL(file);
   };
 
   const publishPost = (event) => {
