@@ -313,10 +313,12 @@ function App() {
               <Bell size={20} />
               <span className="notification-dot" />
             </button>
-            <button className="publish-button" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
-              <Plus size={18} />
-              <span>Опубликовать</span>
-            </button>
+            {activeNav === "Лента" && (
+              <button className="publish-button" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
+                <Plus size={18} />
+                <span>Опубликовать</span>
+              </button>
+            )}
           </div>
         </header>
 
@@ -403,15 +405,17 @@ function App() {
             </div>
           </section>
 
-          <section className="composer-card">
-            <div className="composer-avatar">А</div>
-            <button className="composer-placeholder" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
-              Расскажи, что сегодня вытворяет твой кот...
-            </button>
-            <button className="composer-camera" aria-label="Добавить фото" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
-              <Camera size={19} />
-            </button>
-          </section>
+          {activeNav === "Лента" && (
+            <section className="composer-card">
+              <div className="composer-avatar">А</div>
+              <button className="composer-placeholder" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
+                Расскажи, что сегодня вытворяет твой кот...
+              </button>
+              <button className="composer-camera" aria-label="Добавить фото" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
+                <Camera size={19} />
+              </button>
+            </section>
+          )}
 
           {activeNav === "Обзор" && (
             <section className="overview-card">
