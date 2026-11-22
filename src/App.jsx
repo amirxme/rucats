@@ -64,6 +64,7 @@ function App() {
   const [activeNav, setActiveNav] = useState("Лента");
   const [theme, setTheme] = useState(() => localStorage.getItem("rucats-theme") || "light");
   const [openPostMenu, setOpenPostMenu] = useState(null);
+  const [editingPostId, setEditingPostId] = useState(null);
   const [postsState, setPostsState] = useState(() => JSON.parse(localStorage.getItem("rucats-posts") || "null") || posts);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
@@ -147,6 +148,13 @@ function App() {
     setOpenPostMenu(null);
   };
 
+  const openPostEditor = (post) => {
+    setEditingPostId(post.id);
+    setDraft({ text: post.text, catId: post.catId || "martin", image: post.image });
+    setOpenPostMenu(null);
+    setShowComposer(true);
+  };
+
   const handleImageChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -160,6 +168,17 @@ function App() {
     const text = draft.text.trim();
     if (!text && !draft.image) return;
     const selectedCat = cats.find((cat) => cat.id === draft.catId);
+
+    if (editingPostId !== null) {
+      setPostsState((currentPosts) => currentPosts.map((post) => post.id === editingPostId
+        ? { ...post, text: text || `${selectedCat?.name || "Мой кот"} сегодня снова главный босс.`, image: draft.image || post.image, catId: draft.catId }
+        : post
+      ));
+      setDraft({ text: "", catId: "martin", image: "" });
+      setEditingPostId(null);
+      setShowComposer(false);
+      return;
+    }
 
     setPostsState((currentPosts) => [
       {
@@ -321,7 +340,7 @@ function App() {
               <span className="notification-dot" />
             </button>
             {activeNav === "Лента" && (
-              <button className="publish-button" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
+              <button className="publish-button" onClick={() => { setEditingPostId(null); setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
                 <Plus size={18} />
                 <span>Опубликовать</span>
               </button>
@@ -415,10 +434,10 @@ function App() {
           {activeNav === "Лента" && (
             <section className="composer-card">
               <div className="composer-avatar">А</div>
-              <button className="composer-placeholder" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
+              <button className="composer-placeholder" onClick={() => { setEditingPostId(null); setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
                 Расскажи, что сегодня вытворяет твой кот...
               </button>
-              <button className="composer-camera" aria-label="Добавить фото" onClick={() => { setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
+              <button className="composer-camera" aria-label="Добавить фото" onClick={() => { setEditingPostId(null); setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
                 <Camera size={19} />
               </button>
             </section>
@@ -465,6 +484,7 @@ function App() {
                   </button>
                   {openPostMenu === post.id && post.author === "Амир" && (
                     <div className="post-menu">
+                      <button onClick={() => openPostEditor(post)}>Редактировать</button>
                       <button onClick={() => deletePost(post.id)}>Удалить публикацию</button>
                     </div>
                   )}
@@ -581,8 +601,8 @@ function App() {
           <section className="composer-modal" role="dialog" aria-modal="true" aria-labelledby="composer-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <div>
-                <p className="eyebrow">Новая история</p>
-                <h2 id="composer-title">Расскажи про своего кота</h2>
+                <p className="eyebrow">{editingPostId !== null ? "Редактирование" : "Новая история"}</p>
+                <h2 id="composer-title">{editingPostId !== null ? "Измени свою историю" : "Расскажи про своего кота"}</h2>
               </div>
               <button className="modal-close" aria-label="Закрыть" onClick={() => setShowComposer(false)}>
                 <X size={20} />
@@ -617,7 +637,7 @@ function App() {
 
               <div className="modal-footer">
                 <button type="button" className="modal-cancel" onClick={() => setShowComposer(false)}>Отмена</button>
-                <button type="submit" className="modal-submit" disabled={!draft.text.trim() && !draft.image}>Опубликовать</button>
+                <button type="submit" className="modal-submit" disabled={!draft.text.trim() && !draft.image}>{editingPostId !== null ? "Сохранить изменения" : "Опубликовать"}</button>
               </div>
             </form>
           </section>
