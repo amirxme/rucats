@@ -515,6 +515,7 @@ h1 span {
   display: flex;
   align-items: center;
   gap: 11px;
+  position: relative;
 }
 
 .post-avatar {
@@ -545,6 +546,33 @@ h1 span {
   place-items: center;
   color: #aaa19a;
   background: transparent;
+}
+
+.post-menu {
+  position: absolute;
+  z-index: 4;
+  top: 34px;
+  right: 0;
+  min-width: 170px;
+  padding: 5px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  box-shadow: var(--shadow);
+}
+
+.post-menu button {
+  width: 100%;
+  padding: 9px 10px;
+  color: #c85f4c;
+  background: transparent;
+  border-radius: 7px;
+  font-size: 11px;
+  text-align: left;
+}
+
+.post-menu button:hover {
+  background: var(--coral-light);
 }
 
 .post-text {

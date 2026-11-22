@@ -63,6 +63,7 @@ const posts = [
 function App() {
   const [activeNav, setActiveNav] = useState("Лента");
   const [theme, setTheme] = useState(() => localStorage.getItem("rucats-theme") || "light");
+  const [openPostMenu, setOpenPostMenu] = useState(null);
   const [postsState, setPostsState] = useState(() => JSON.parse(localStorage.getItem("rucats-posts") || "null") || posts);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
@@ -138,6 +139,12 @@ function App() {
         post.id === postId ? { ...post, saved: !post.saved } : post
       )
     );
+  };
+
+  const deletePost = (postId) => {
+    if (!window.confirm("Удалить эту публикацию?")) return;
+    setPostsState((currentPosts) => currentPosts.filter((post) => post.id !== postId));
+    setOpenPostMenu(null);
   };
 
   const handleImageChange = (event) => {
@@ -453,9 +460,14 @@ function App() {
                       {post.handle} · {post.time}
                     </span>
                   </div>
-                  <button className="post-more" aria-label="Ещё">
+                  <button className="post-more" aria-label="Ещё" onClick={() => post.author === "Амир" && setOpenPostMenu((current) => current === post.id ? null : post.id)}>
                     <MoreHorizontal size={19} />
                   </button>
+                  {openPostMenu === post.id && post.author === "Амир" && (
+                    <div className="post-menu">
+                      <button onClick={() => deletePost(post.id)}>Удалить публикацию</button>
+                    </div>
+                  )}
                 </div>
 
                 <p className="post-text">{post.text}</p>
