@@ -81,6 +81,15 @@ const writeStorage = (key, value) => {
 const emptyDraft = { text: "", catId: "martin", image: "" };
 const emptyNewCatDraft = { name: "", age: "", breed: "", bio: "", image: "" };
 
+const pluralize = (count, one, few, many) => {
+  const lastTwo = count % 100;
+  const last = count % 10;
+  if (lastTwo >= 11 && lastTwo <= 14) return many;
+  if (last === 1) return one;
+  if (last >= 2 && last <= 4) return few;
+  return many;
+};
+
 function App() {
   const [activeNav, setActiveNav] = useState("Лента");
   const [theme, setTheme] = useState(() => localStorage.getItem("rucats-theme") || "light");
@@ -175,7 +184,7 @@ function App() {
 
   const deleteCat = () => {
     if (!activeCat) return;
-    if (!window.confirm(`Удалить профиль кота «${activeCat.name}»? Его публикации останутся в ленте.`)) return;
+    if (!window.confirm(`Удалить профиль кота «${activeCat.name}»? Публикации этого кота останутся в ленте.`)) return;
     if (activeCat.id === "martin") setMartinDeleted(true);
     else setExtraCats((current) => current.filter((cat) => cat.id !== activeCat.id));
     const nextCat = cats.find((cat) => cat.id !== activeCat.id);
@@ -226,7 +235,7 @@ function App() {
     const reader = new FileReader();
     reader.onload = () => {
       if (reader.result.length > 1200000) {
-        window.alert("Фото слишком большое. Выбери изображение до 1 МБ.");
+        window.alert("Фото слишком большое. Выбери изображение размером до 1 МБ.");
         return;
       }
       setDraft((current) => ({ ...current, image: reader.result }));
@@ -243,7 +252,7 @@ function App() {
 
     if (editingPostId !== null) {
       setPostsState((currentPosts) => currentPosts.map((post) => post.id === editingPostId
-          ? { ...post, text: text || `${selectedCat?.name || "Мой кот"} сегодня снова главный босс.`, image: draft.image || post.image, catId: validCatId }
+          ? { ...post, text: text || `${selectedCat?.name || "Мой питомец"} сегодня снова в центре внимания.`, image: draft.image || post.image, catId: validCatId }
         : post
       ));
       closeComposer();
@@ -259,7 +268,7 @@ function App() {
         avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=160&q=85",
         image: draft.image || "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1200&q=85",
         catId: validCatId,
-        text: text || `${selectedCat?.name || "Мой кот"} сегодня снова главный босс.`,
+        text: text || `${selectedCat?.name || "Мой питомец"} сегодня снова в центре внимания.`,
         likes: 0,
         comments: 0,
         liked: false,
@@ -276,7 +285,7 @@ function App() {
     const reader = new FileReader();
     reader.onload = () => {
       if (reader.result.length > 1200000) {
-        window.alert("Фото слишком большое. Выбери изображение до 1 МБ.");
+        window.alert("Фото слишком большое. Выбери изображение размером до 1 МБ.");
         return;
       }
       setNewCatDraft((current) => ({ ...current, image: reader.result }));
@@ -287,7 +296,7 @@ function App() {
   const addCat = (event) => {
     event.preventDefault();
     if (!newCatDraft.name.trim()) return;
-    const newCat = { id: `cat-${Date.now()}`, name: newCatDraft.name.trim(), age: newCatDraft.age.trim() || "возраст не указан", breed: newCatDraft.breed.trim() || "порода не указана", bio: newCatDraft.bio.trim() || "Новый пушистый житель rucats.", image: newCatDraft.image || "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=420&q=85" };
+    const newCat = { id: `cat-${Date.now()}`, name: newCatDraft.name.trim(), age: newCatDraft.age.trim() || "возраст не указан", breed: newCatDraft.breed.trim() || "порода не указана", bio: newCatDraft.bio.trim() || "Новый питомец rucats.", image: newCatDraft.image || "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=420&q=85" };
     setExtraCats((current) => [...current, newCat]);
     setSelectedCatId(newCat.id);
     closeAddCat();
@@ -343,7 +352,7 @@ function App() {
               <img src={cat.image} alt={`Кот ${cat.name}`} />
               <span>
                 <strong>{cat.name}</strong>
-                <small>{cat.id === "martin" ? "мой главный босс" : cat.breed}</small>
+                <small>{cat.id === "martin" ? "мой любимец" : cat.breed}</small>
               </span>
               <MoreHorizontal size={17} />
             </button>
@@ -362,7 +371,7 @@ function App() {
             <Sparkles size={18} />
             <p>
               <strong>Кот дня</strong>
-              <span>Уже заглядывали?</span>
+              <span>Загляни в его профиль</span>
             </p>
             <button aria-label="Открыть кота дня">→</button>
           </div>
@@ -448,21 +457,21 @@ function App() {
                       <h1>{userProfile.name}</h1>
                       <p className="profile-handle">@amirxme</p>
                       <p className="profile-bio">{userProfile.bio}</p>
-                      <div className="profile-meta"><MapPin size={14} /> {userProfile.city} <span>·</span> на rucats недавно</div>
+                      <div className="profile-meta"><MapPin size={14} /> {userProfile.city} <span>·</span> на rucats с недавних пор</div>
                     </div>
                     <button className="profile-edit-button" onClick={() => openProfileEditor("user")}><Pencil size={16} /> Редактировать</button>
                   </div>
                   <div className="profile-stats">
-                    <div><strong>{cats.length}</strong><span>кот{cats.length === 1 ? "" : "а"}</span></div>
+                    <div><strong>{cats.length}</strong><span>{pluralize(cats.length, "кот", "кота", "котов")}</span></div>
                     <div><strong>{postsState.filter((post) => post.author === "Амир").length}</strong><span>публикаций</span></div>
                     <div><strong>0</strong><span>подписчиков</span></div>
                   </div>
-                  <div className="profile-section-title"><div><h2>Мои коты</h2><p>Пушистые хозяева этого профиля</p></div></div>
+                  <div className="profile-section-title"><div><h2>Мои коты</h2><p>Пушистые жители этого профиля</p></div></div>
                   <div className="profile-cats-list">
                     {cats.map((cat) => (
                       <button className="featured-cat-card" key={cat.id} onClick={() => { setSelectedCatId(cat.id); setProfileView("cat"); }}>
                         <img src={cat.image} alt={cat.name} />
-                        <span><strong>{cat.name}</strong><small>{cat.id === "martin" ? "мой главный босс" : cat.breed} · {cat.age}</small></span>
+                        <span><strong>{cat.name}</strong><small>{cat.id === "martin" ? "мой любимец" : cat.breed} · {cat.age}</small></span>
                         <ArrowLeft className="cat-card-arrow" size={18} />
                       </button>
                     ))}
@@ -479,7 +488,7 @@ function App() {
                     <div className="profile-identity">
                       <p className="eyebrow">Профиль кота</p>
                       <h1>{activeCat.name}</h1>
-                      <p className="profile-handle">главный босс дома</p>
+                      <p className="profile-handle">любимец дома</p>
                       <p className="profile-bio">{activeCat.bio}</p>
                       <div className="profile-meta"><MapPin size={14} /> {userProfile.city} <span>·</span> {activeCat.age}</div>
                     </div>
@@ -490,7 +499,7 @@ function App() {
                     <div><strong>{activeCatPosts.length}</strong><span>историй</span></div>
                     <div><strong>{activeCat.name}</strong><span>имя</span></div>
                   </div>
-                  <div className="profile-section-title"><div><h2>Истории {activeCat.name}</h2><p>Всё самое важное о главном боссе</p></div><Grid3X3 size={19} /></div>
+                  <div className="profile-section-title"><div><h2>Истории {activeCat.name}</h2><p>Все важные истории о питомце</p></div><Grid3X3 size={19} /></div>
                   <div className="profile-post-grid">
                     {activeCatPosts.length ? activeCatPosts.map((post) => <img key={post.id} src={post.image} alt={post.text} />) : <div className="profile-empty">У {activeCat.name} пока нет историй</div>}
                   </div>
@@ -502,9 +511,9 @@ function App() {
           {activeNav === "Лента" && <section className="welcome-block">
             <div>
               <p className="eyebrow">{todayLabel}</p>
-              <h1>Привет, Амир <span>👋</span></h1>
+                <h1>Привет, {userProfile.name} <span>👋</span></h1>
               <p className="welcome-description">
-                Что нового у твоего пушистого друга?
+                Что нового у твоих питомцев?
               </p>
             </div>
 
@@ -544,7 +553,7 @@ function App() {
           <div className="feed-header">
             <div>
               <h2>{activeNav === "Сохранённое" ? "Сохранённое" : activeNav === "Обзор" ? "Популярное сегодня" : "Свежие истории"}</h2>
-              <p>{activeNav === "Сохранённое" ? "Посты, которые ты сохранил" : activeNav === "Обзор" ? "Сначала самые любимые истории" : "Самое интересное от сообщества"}</p>
+              <p>{activeNav === "Сохранённое" ? "Посты, которые ты сохранил" : activeNav === "Обзор" ? "Сначала — самые популярные истории" : "Самое интересное от участников"}</p>
             </div>
             <button className="sort-button">
               {activeNav === "Обзор" ? "Популярные" : "Новые"}
@@ -621,7 +630,7 @@ function App() {
         <div className="modal-backdrop" onMouseDown={closeAddCat}>
           <section className="composer-modal profile-editor-modal" role="dialog" aria-modal="true" aria-labelledby="add-cat-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="modal-header">
-              <div><p className="eyebrow">Новый житель</p><h2 id="add-cat-title">Добавить кота</h2></div>
+              <div><p className="eyebrow">Новый питомец</p><h2 id="add-cat-title">Добавить кота</h2></div>
               <button className="modal-close" aria-label="Закрыть" onClick={closeAddCat}><X size={20} /></button>
             </div>
             <form onSubmit={addCat}>
@@ -631,7 +640,7 @@ function App() {
                 <div><label className="field-label" htmlFor="new-cat-age">Возраст</label><input className="profile-input" id="new-cat-age" value={newCatDraft.age} onChange={(event) => setNewCatDraft((current) => ({ ...current, age: event.target.value }))} placeholder="2 года" /></div>
                 <div><label className="field-label" htmlFor="new-cat-breed">Порода</label><input className="profile-input" id="new-cat-breed" value={newCatDraft.breed} onChange={(event) => setNewCatDraft((current) => ({ ...current, breed: event.target.value }))} placeholder="Британец" /></div>
               </div>
-              <label className="field-label" htmlFor="new-cat-bio">О коте</label>
+              <label className="field-label" htmlFor="new-cat-bio">О питомце</label>
               <textarea id="new-cat-bio" value={newCatDraft.bio} onChange={(event) => setNewCatDraft((current) => ({ ...current, bio: event.target.value }))} rows="3" placeholder="Какой у него характер?" />
               <label className="upload-field cat-photo-upload">
                 <input type="file" accept="image/*" onChange={handleNewCatImage} />
@@ -651,7 +660,7 @@ function App() {
             <div className="modal-header">
               <div>
                 <p className="eyebrow">Настройки профиля</p>
-                <h2 id="edit-profile-title">{editDraft.type === "user" ? "Редактировать профиль" : `Редактировать ${activeCat.name}`}</h2>
+                <h2 id="edit-profile-title">{editDraft.type === "user" ? "Редактировать профиль" : `Редактировать профиль ${activeCat.name}`}</h2>
               </div>
               <button className="modal-close" aria-label="Закрыть" onClick={() => setShowEditProfile(false)}><X size={20} /></button>
             </div>
@@ -687,7 +696,7 @@ function App() {
             <div className="modal-header">
               <div>
                 <p className="eyebrow">{editingPostId !== null ? "Редактирование" : "Новая история"}</p>
-                <h2 id="composer-title">{editingPostId !== null ? "Измени свою историю" : "Расскажи про своего кота"}</h2>
+                <h2 id="composer-title">{editingPostId !== null ? "Изменить историю" : "Расскажи о своём коте"}</h2>
               </div>
               <button className="modal-close" aria-label="Закрыть" onClick={closeComposer}>
                 <X size={20} />
