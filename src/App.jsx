@@ -20,7 +20,6 @@ import {
   Grid3X3,
   Share2,
   Sparkles,
-  UserRound,
   X,
   Sun,
 } from "lucide-react";
@@ -60,53 +59,100 @@ const posts = [
   },
 ];
 
+const readStorage = (key, fallback) => {
+  try {
+    const value = localStorage.getItem(key);
+    if (!value) return fallback;
+    const parsed = JSON.parse(value);
+    return parsed ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const writeStorage = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Не ломаем интерфейс, если браузер переполнен или запрещает запись.
+  }
+};
+
+const emptyDraft = { text: "", catId: "martin", image: "" };
+const emptyNewCatDraft = { name: "", age: "", breed: "", bio: "", image: "" };
+
 function App() {
   const [activeNav, setActiveNav] = useState("Лента");
   const [theme, setTheme] = useState(() => localStorage.getItem("rucats-theme") || "light");
   const [openPostMenu, setOpenPostMenu] = useState(null);
   const [editingPostId, setEditingPostId] = useState(null);
-  const [postsState, setPostsState] = useState(() => JSON.parse(localStorage.getItem("rucats-posts") || "null") || posts);
+  const [postsState, setPostsState] = useState(() => {
+    const storedPosts = readStorage("rucats-posts", posts);
+    return Array.isArray(storedPosts) ? storedPosts : posts;
+  });
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
-  const [draft, setDraft] = useState({ text: "", catId: "martin", image: "" });
+  const [draft, setDraft] = useState(emptyDraft);
   const [profileView, setProfileView] = useState(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showAddCat, setShowAddCat] = useState(false);
   const [selectedCatId, setSelectedCatId] = useState("martin");
-  const [extraCats, setExtraCats] = useState(() => JSON.parse(localStorage.getItem("rucats-cats") || "[]"));
+  const [extraCats, setExtraCats] = useState(() => {
+    const storedCats = readStorage("rucats-cats", []);
+    return Array.isArray(storedCats) ? storedCats : [];
+  });
   const [martinDeleted, setMartinDeleted] = useState(() => localStorage.getItem("rucats-martin-deleted") === "true");
-  const [newCatDraft, setNewCatDraft] = useState({ name: "", age: "", breed: "", bio: "", image: "" });
-  const [userProfile, setUserProfile] = useState(() => JSON.parse(localStorage.getItem("rucats-user-profile") || 'null') || { name: "Амир", bio: "Люблю котов, уютные вечера и хорошие истории.", city: "Москва" });
-  const [catProfile, setCatProfile] = useState(() => JSON.parse(localStorage.getItem("rucats-cat-profile") || 'null') || { name: "Мартин", age: "1 год", bio: "Любит солнечные подоконники, коробки и командовать." });
+  const [newCatDraft, setNewCatDraft] = useState(emptyNewCatDraft);
+  const [userProfile, setUserProfile] = useState(() => readStorage("rucats-user-profile", { name: "Амир", bio: "Люблю котов, уютные вечера и хорошие истории.", city: "Москва" }));
+  const [catProfile, setCatProfile] = useState(() => readStorage("rucats-cat-profile", { name: "Мартин", age: "1 год", bio: "Любит солнечные подоконники, коробки и командовать." }));
   const [editDraft, setEditDraft] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem("rucats-user-profile", JSON.stringify(userProfile));
+    writeStorage("rucats-user-profile", userProfile);
   }, [userProfile]);
 
   useEffect(() => {
-    localStorage.setItem("rucats-cat-profile", JSON.stringify(catProfile));
+    writeStorage("rucats-cat-profile", catProfile);
   }, [catProfile]);
 
   useEffect(() => {
-    localStorage.setItem("rucats-cats", JSON.stringify(extraCats));
+    writeStorage("rucats-cats", extraCats);
   }, [extraCats]);
 
   useEffect(() => {
-    localStorage.setItem("rucats-martin-deleted", String(martinDeleted));
+    try { localStorage.setItem("rucats-martin-deleted", String(martinDeleted)); } catch { /* ignore */ }
   }, [martinDeleted]);
 
   useEffect(() => {
-    localStorage.setItem("rucats-posts", JSON.stringify(postsState));
+    writeStorage("rucats-posts", postsState);
   }, [postsState]);
 
   useEffect(() => {
-    localStorage.setItem("rucats-theme", theme);
+    try { localStorage.setItem("rucats-theme", theme); } catch { /* ignore */ }
   }, [theme]);
 
   const cats = [...(martinDeleted ? [] : [{ id: "martin", ...catProfile, image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=420&q=85" }]), ...extraCats];
   const activeCat = cats.find((cat) => cat.id === selectedCatId) || cats[0] || null;
+  const activeCatPosts = activeCat ? postsState.filter((post) => post.catId === activeCat.id) : [];
+  const todayLabel = new Intl.DateTimeFormat("ru-RU", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
+
+  const closeComposer = () => {
+    setShowComposer(false);
+    setEditingPostId(null);
+    setDraft(emptyDraft);
+  };
+
+  const openNewPost = () => {
+    setEditingPostId(null);
+    setDraft({ ...emptyDraft, catId: activeCat?.id || "" });
+    setShowComposer(true);
+  };
+
+  const closeAddCat = () => {
+    setShowAddCat(false);
+    setNewCatDraft(emptyNewCatDraft);
+  };
 
   const openProfileEditor = (type) => {
     if (type === "cat" && !activeCat) return;
@@ -178,7 +224,13 @@ function App() {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => setDraft((current) => ({ ...current, image: reader.result }));
+    reader.onload = () => {
+      if (reader.result.length > 1200000) {
+        window.alert("Фото слишком большое. Выбери изображение до 1 МБ.");
+        return;
+      }
+      setDraft((current) => ({ ...current, image: reader.result }));
+    };
     reader.readAsDataURL(file);
   };
 
@@ -194,9 +246,7 @@ function App() {
           ? { ...post, text: text || `${selectedCat?.name || "Мой кот"} сегодня снова главный босс.`, image: draft.image || post.image, catId: validCatId }
         : post
       ));
-      setDraft({ text: "", catId: "martin", image: "" });
-      setEditingPostId(null);
-      setShowComposer(false);
+      closeComposer();
       return;
     }
 
@@ -217,15 +267,20 @@ function App() {
       },
       ...currentPosts,
     ]);
-    setDraft({ text: "", catId: "martin", image: "" });
-    setShowComposer(false);
+    closeComposer();
   };
 
   const handleNewCatImage = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => setNewCatDraft((current) => ({ ...current, image: reader.result }));
+    reader.onload = () => {
+      if (reader.result.length > 1200000) {
+        window.alert("Фото слишком большое. Выбери изображение до 1 МБ.");
+        return;
+      }
+      setNewCatDraft((current) => ({ ...current, image: reader.result }));
+    };
     reader.readAsDataURL(file);
   };
 
@@ -235,8 +290,7 @@ function App() {
     const newCat = { id: `cat-${Date.now()}`, name: newCatDraft.name.trim(), age: newCatDraft.age.trim() || "возраст не указан", breed: newCatDraft.breed.trim() || "порода не указана", bio: newCatDraft.bio.trim() || "Новый пушистый житель rucats.", image: newCatDraft.image || "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=420&q=85" };
     setExtraCats((current) => [...current, newCat]);
     setSelectedCatId(newCat.id);
-    setNewCatDraft({ name: "", age: "", breed: "", bio: "", image: "" });
-    setShowAddCat(false);
+    closeAddCat();
   };
 
   const navigation = [
@@ -295,7 +349,7 @@ function App() {
             </button>
           ))}
 
-          <button className="add-cat-button" onClick={() => { setShowAddCat(true); setShowMobileMenu(false); }}>
+          <button className="add-cat-button" onClick={() => { setNewCatDraft(emptyNewCatDraft); setShowAddCat(true); setShowMobileMenu(false); }}>
             <span className="add-cat-icon">
               <Plus size={17} />
             </span>
@@ -370,7 +424,7 @@ function App() {
               </div>
             )}
             {activeNav === "Лента" && (
-              <button className="publish-button" onClick={() => { setEditingPostId(null); setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
+              <button className="publish-button" onClick={openNewPost}>
                 <Plus size={18} />
                 <span>Опубликовать</span>
               </button>
@@ -433,12 +487,12 @@ function App() {
                   </div>
                   <div className="profile-stats">
                     <div><strong>{activeCat.age}</strong><span>возраст</span></div>
-                    <div><strong>{postsState.length}</strong><span>историй</span></div>
+                    <div><strong>{activeCatPosts.length}</strong><span>историй</span></div>
                     <div><strong>{activeCat.name}</strong><span>имя</span></div>
                   </div>
                   <div className="profile-section-title"><div><h2>Истории {activeCat.name}</h2><p>Всё самое важное о главном боссе</p></div><Grid3X3 size={19} /></div>
                   <div className="profile-post-grid">
-                    {postsState.filter((post) => post.catId === activeCat.id).length ? postsState.filter((post) => post.catId === activeCat.id).map((post) => <img key={post.id} src={post.image} alt={post.text} />) : <div className="profile-empty">У {activeCat.name} пока нет историй</div>}
+                    {activeCatPosts.length ? activeCatPosts.map((post) => <img key={post.id} src={post.image} alt={post.text} />) : <div className="profile-empty">У {activeCat.name} пока нет историй</div>}
                   </div>
                 </>
               )}
@@ -447,7 +501,7 @@ function App() {
           <>
           {activeNav === "Лента" && <section className="welcome-block">
             <div>
-              <p className="eyebrow">Четверг, 19 ноября</p>
+              <p className="eyebrow">{todayLabel}</p>
               <h1>Привет, Амир <span>👋</span></h1>
               <p className="welcome-description">
                 Что нового у твоего пушистого друга?
@@ -464,10 +518,10 @@ function App() {
           {activeNav === "Лента" && (
             <section className="composer-card">
               <div className="composer-avatar">А</div>
-              <button className="composer-placeholder" onClick={() => { setEditingPostId(null); setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
+              <button className="composer-placeholder" onClick={openNewPost}>
                 Расскажи, что сегодня вытворяет твой кот...
               </button>
-              <button className="composer-camera" aria-label="Добавить фото" onClick={() => { setEditingPostId(null); setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
+              <button className="composer-camera" aria-label="Добавить фото" onClick={openNewPost}>
                 <Camera size={19} />
               </button>
             </section>
@@ -564,11 +618,11 @@ function App() {
       </main>
 
       {showAddCat && (
-        <div className="modal-backdrop" onMouseDown={() => setShowAddCat(false)}>
+        <div className="modal-backdrop" onMouseDown={closeAddCat}>
           <section className="composer-modal profile-editor-modal" role="dialog" aria-modal="true" aria-labelledby="add-cat-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <div><p className="eyebrow">Новый житель</p><h2 id="add-cat-title">Добавить кота</h2></div>
-              <button className="modal-close" aria-label="Закрыть" onClick={() => setShowAddCat(false)}><X size={20} /></button>
+              <button className="modal-close" aria-label="Закрыть" onClick={closeAddCat}><X size={20} /></button>
             </div>
             <form onSubmit={addCat}>
               <label className="field-label" htmlFor="new-cat-name">Имя кота</label>
@@ -585,7 +639,7 @@ function App() {
                 <span>{newCatDraft.image ? "Фото выбрано — заменить" : "Добавить фото кота"}</span>
               </label>
               {newCatDraft.image && <img className="upload-preview cat-upload-preview" src={newCatDraft.image} alt="Предпросмотр фото кота" />}
-              <div className="modal-footer"><button type="button" className="modal-cancel" onClick={() => setShowAddCat(false)}>Отмена</button><button type="submit" className="modal-submit" disabled={!newCatDraft.name.trim()}>Добавить кота</button></div>
+              <div className="modal-footer"><button type="button" className="modal-cancel" onClick={closeAddCat}>Отмена</button><button type="submit" className="modal-submit" disabled={!newCatDraft.name.trim()}>Добавить кота</button></div>
             </form>
           </section>
         </div>
@@ -628,14 +682,14 @@ function App() {
       )}
 
       {showComposer && (
-        <div className="modal-backdrop" onMouseDown={() => setShowComposer(false)}>
+        <div className="modal-backdrop" onMouseDown={closeComposer}>
           <section className="composer-modal" role="dialog" aria-modal="true" aria-labelledby="composer-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <p className="eyebrow">{editingPostId !== null ? "Редактирование" : "Новая история"}</p>
                 <h2 id="composer-title">{editingPostId !== null ? "Измени свою историю" : "Расскажи про своего кота"}</h2>
               </div>
-              <button className="modal-close" aria-label="Закрыть" onClick={() => setShowComposer(false)}>
+              <button className="modal-close" aria-label="Закрыть" onClick={closeComposer}>
                 <X size={20} />
               </button>
             </div>
@@ -668,7 +722,7 @@ function App() {
               {draft.image && <img className="upload-preview" src={draft.image} alt="Предпросмотр публикации" />}
 
               <div className="modal-footer">
-                <button type="button" className="modal-cancel" onClick={() => setShowComposer(false)}>Отмена</button>
+                <button type="button" className="modal-cancel" onClick={closeComposer}>Отмена</button>
                 <button type="submit" className="modal-submit" disabled={!draft.text.trim() && !draft.image}>{editingPostId !== null ? "Сохранить изменения" : "Опубликовать"}</button>
               </div>
             </form>
