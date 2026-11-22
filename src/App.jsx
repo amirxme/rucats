@@ -67,6 +67,7 @@ function App() {
   const [editingPostId, setEditingPostId] = useState(null);
   const [postsState, setPostsState] = useState(() => JSON.parse(localStorage.getItem("rucats-posts") || "null") || posts);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
   const [draft, setDraft] = useState({ text: "", catId: "martin", image: "" });
   const [profileView, setProfileView] = useState(null);
@@ -355,10 +356,19 @@ function App() {
             <button className="icon-button theme-toggle" aria-label={theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"} onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}>
               {theme === "dark" ? <Sun size={19} /> : <Moon size={19} />}
             </button>
-            <button className="icon-button" aria-label="Уведомления">
+            <button className="icon-button" aria-label="Уведомления" onClick={() => setShowNotifications((current) => !current)}>
               <Bell size={20} />
               <span className="notification-dot" />
             </button>
+            {showNotifications && (
+              <div className="notifications-popover">
+                <div className="notifications-header">
+                  <strong>Уведомления</strong>
+                  <button aria-label="Закрыть уведомления" onClick={() => setShowNotifications(false)}><X size={16} /></button>
+                </div>
+                <p className="notifications-empty">Пока уведомлений нет</p>
+              </div>
+            )}
             {activeNav === "Лента" && (
               <button className="publish-button" onClick={() => { setEditingPostId(null); setDraft((current) => ({ ...current, catId: selectedCatId })); setShowComposer(true); }}>
                 <Plus size={18} />
