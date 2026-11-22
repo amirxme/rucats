@@ -74,6 +74,7 @@ function App() {
   const [showAddCat, setShowAddCat] = useState(false);
   const [selectedCatId, setSelectedCatId] = useState("martin");
   const [extraCats, setExtraCats] = useState(() => JSON.parse(localStorage.getItem("rucats-cats") || "[]"));
+  const [martinDeleted, setMartinDeleted] = useState(() => localStorage.getItem("rucats-martin-deleted") === "true");
   const [newCatDraft, setNewCatDraft] = useState({ name: "", age: "", breed: "", bio: "", image: "" });
   const [userProfile, setUserProfile] = useState(() => JSON.parse(localStorage.getItem("rucats-user-profile") || 'null') || { name: "Амир", bio: "Люблю котов, уютные вечера и хорошие истории.", city: "Москва" });
   const [catProfile, setCatProfile] = useState(() => JSON.parse(localStorage.getItem("rucats-cat-profile") || 'null') || { name: "Мартин", age: "1 год", bio: "Любит солнечные подоконники, коробки и командовать." });
@@ -92,6 +93,10 @@ function App() {
   }, [extraCats]);
 
   useEffect(() => {
+    localStorage.setItem("rucats-martin-deleted", String(martinDeleted));
+  }, [martinDeleted]);
+
+  useEffect(() => {
     localStorage.setItem("rucats-posts", JSON.stringify(postsState));
   }, [postsState]);
 
@@ -99,10 +104,11 @@ function App() {
     localStorage.setItem("rucats-theme", theme);
   }, [theme]);
 
-  const cats = [{ id: "martin", ...catProfile, image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=420&q=85" }, ...extraCats];
-  const activeCat = cats.find((cat) => cat.id === selectedCatId) || cats[0];
+  const cats = [...(martinDeleted ? [] : [{ id: "martin", ...catProfile, image: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=420&q=85" }]), ...extraCats];
+  const activeCat = cats.find((cat) => cat.id === selectedCatId) || cats[0] || null;
 
   const openProfileEditor = (type) => {
+    if (type === "cat" && !activeCat) return;
     setEditDraft(type === "user" ? { type, ...userProfile } : { type, ...activeCat });
     setShowEditProfile(true);
   };
@@ -116,6 +122,18 @@ function App() {
       if (activeCat.id === "martin") setCatProfile({ name: updatedCat.name, age: updatedCat.age, bio: updatedCat.bio });
       else setExtraCats((current) => current.map((cat) => cat.id === activeCat.id ? updatedCat : cat));
     }
+    setShowEditProfile(false);
+    setEditDraft(null);
+  };
+
+  const deleteCat = () => {
+    if (!activeCat) return;
+    if (!window.confirm(`Удалить профиль кота «${activeCat.name}»? Его публикации останутся в ленте.`)) return;
+    if (activeCat.id === "martin") setMartinDeleted(true);
+    else setExtraCats((current) => current.filter((cat) => cat.id !== activeCat.id));
+    const nextCat = cats.find((cat) => cat.id !== activeCat.id);
+    setSelectedCatId(nextCat?.id || "martin");
+    setProfileView(null);
     setShowEditProfile(false);
     setEditDraft(null);
   };
@@ -167,11 +185,12 @@ function App() {
     event.preventDefault();
     const text = draft.text.trim();
     if (!text && !draft.image) return;
-    const selectedCat = cats.find((cat) => cat.id === draft.catId);
+    const validCatId = cats.some((cat) => cat.id === draft.catId) ? draft.catId : null;
+    const selectedCat = cats.find((cat) => cat.id === validCatId);
 
     if (editingPostId !== null) {
       setPostsState((currentPosts) => currentPosts.map((post) => post.id === editingPostId
-        ? { ...post, text: text || `${selectedCat?.name || "Мой кот"} сегодня снова главный босс.`, image: draft.image || post.image, catId: draft.catId }
+          ? { ...post, text: text || `${selectedCat?.name || "Мой кот"} сегодня снова главный босс.`, image: draft.image || post.image, catId: validCatId }
         : post
       ));
       setDraft({ text: "", catId: "martin", image: "" });
@@ -188,7 +207,7 @@ function App() {
         time: "только что",
         avatar: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=160&q=85",
         image: draft.image || "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1200&q=85",
-        catId: draft.catId,
+        catId: validCatId,
         text: text || `${selectedCat?.name || "Мой кот"} сегодня снова главный босс.`,
         likes: 0,
         comments: 0,
@@ -214,6 +233,7 @@ function App() {
     if (!newCatDraft.name.trim()) return;
     const newCat = { id: `cat-${Date.now()}`, name: newCatDraft.name.trim(), age: newCatDraft.age.trim() || "возраст не указан", breed: newCatDraft.breed.trim() || "порода не указана", bio: newCatDraft.bio.trim() || "Новый пушистый житель rucats.", image: newCatDraft.image || "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?auto=format&fit=crop&w=420&q=85" };
     setExtraCats((current) => [...current, newCat]);
+    setSelectedCatId(newCat.id);
     setNewCatDraft({ name: "", age: "", breed: "", bio: "", image: "" });
     setShowAddCat(false);
   };
@@ -588,6 +608,7 @@ function App() {
               <label className="field-label" htmlFor="edit-bio">Описание</label>
               <textarea id="edit-bio" value={editDraft.bio} onChange={(event) => setEditDraft((current) => ({ ...current, bio: event.target.value }))} rows="4" />
               <div className="modal-footer">
+                {editDraft.type === "cat" && <button type="button" className="modal-delete" onClick={deleteCat}>Удалить кота</button>}
                 <button type="button" className="modal-cancel" onClick={() => setShowEditProfile(false)}>Отмена</button>
                 <button type="submit" className="modal-submit">Сохранить</button>
               </div>
@@ -622,7 +643,8 @@ function App() {
               <div className="modal-form-row">
                 <div className="select-field">
                   <label className="field-label" htmlFor="post-cat">Кот</label>
-                  <select id="post-cat" value={draft.catId} onChange={(event) => setDraft((current) => ({ ...current, catId: event.target.value }))}>
+                  <select id="post-cat" value={cats.some((cat) => cat.id === draft.catId) ? draft.catId : ""} onChange={(event) => setDraft((current) => ({ ...current, catId: event.target.value }))}>
+                    {!cats.length && <option value="">Без привязки к коту</option>}
                     {cats.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                   </select>
                 </div>
